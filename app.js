@@ -3,6 +3,8 @@ const morgan = require('morgan');
 // custom modules
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
 
@@ -22,23 +24,10 @@ app.use('/api/v1/users', userRouter);
 
 // un-matched routes
 app.all('*', (req, res, next) => {
-  const error = new Error(`Can't find ${req.originalUrl} on this server!`);
-  error.status = 'fail';
-  error.statusCode = 404;
-
-  next(error);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 // global error handling middleware for all
-app.use((error, req, res, next) => {
-  error.statusCode = error.statusCode || 500;
-  error.status = error.status || 'error';
-
-  res
-    .status(error.statusCode)
-    .json({ status: error.status, message: error.message });
-
-  return;
-});
+app.use(globalErrorHandler);
 
 module.exports = app;
