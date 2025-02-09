@@ -1,9 +1,17 @@
+// models
+const User = require('./../models/userModel');
+// utilities
+const catchAsync = require('./../utils/catchAsync');
+
 // controllers
-exports.getAllUsers = (req, res) => {
+
+exports.getAllUsers = catchAsync(async (req, res) => {
+  const users = await User.find();
+
   res
-    .status(500)
-    .json({ status: 'error', message: 'This route is not yet defined.' });
-};
+    .status(200)
+    .json({ status: 'error', results: users.length, data: { users } });
+});
 
 exports.createUser = (req, res) => {
   res
