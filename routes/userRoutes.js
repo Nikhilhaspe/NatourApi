@@ -7,7 +7,9 @@ const authController = require('./../controllers/authController');
 // routes
 userRouter
   .post('/signup', authController.signup)
-  .post('/login', authController.login);
+  .post('/login', authController.login)
+  .post('/forgotPassword', authController.forgotPassword)
+  .patch('/resetPassword/:token', authController.resetPassword);
 
 userRouter
   .route('/')
