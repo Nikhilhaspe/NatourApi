@@ -15,6 +15,12 @@ const signToken = (id) => {
   });
 };
 
+const createSendtoken = (res, user, statusCode) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({ status: 'success', token, data: { user } });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -23,10 +29,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({ status: 'success', token, data: { user: newUser } });
-
+  createSendtoken(res, 201, newUser);
   return;
 });
 
@@ -44,9 +47,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return;
   }
 
-  const token = signToken(user._id);
-
-  res.status(200).json({ status: 'success', token });
+  createSendtoken(res, user, 200);
   return;
 });
 
@@ -133,7 +134,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
-  // 1. get User bases on the token
+  // 1. get User based on the token
   const hashedToken = crypto
     .createHash('sha256')
     .update(req.params.token)
@@ -156,6 +157,35 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 4. log the user in, send JWT
-  const token = signToken(user._id);
-  res.status(200).json({ status: 'sucess', token });
+  createSendtoken(res, user, 200);
+  return;
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1. get user
+  const user = await User.findById(req.body.id).select('+password');
+
+  if (!user) {
+    next(new AppError('User not found!', 404));
+    return;
+  }
+
+  // 2. check is pass correct
+  const isPasswordValid = await user.correctPassword(
+    req.body.currentPassword,
+    user.password,
+  );
+  if (!isPasswordValid) {
+    next(new AppError('Invalid current password!', 401));
+    return;
+  }
+
+  // 3. if so, update password
+  user.password = req.body.newPassword;
+  user.passwordConfirm = req.body.newPassword;
+  user.save();
+
+  // 4. log the user in, send JWT
+  createSendtoken(res, user, 200);
+  return;
 });
