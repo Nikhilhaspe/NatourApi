@@ -2,6 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 // custom modules
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -26,6 +29,23 @@ if (process.env.NODE_ENV === 'development') {
 }
 // body parser middleware
 app.use(express.json({ limit: '10kb' }));
+// data sanitization against nosql query injection
+app.use(mongoSanitize());
+// data sanitization against XSS
+app.use(xss());
+// parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsAverage',
+      'ratingsQuantity',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
 // static files middleware
 app.use(express.static(`${__dirname}/public`));
 
