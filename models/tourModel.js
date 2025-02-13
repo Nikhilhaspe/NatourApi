@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// models
+const User = require('./userModel');
 
 const tourSchema = mongoose.Schema(
   {
@@ -80,6 +82,39 @@ const tourSchema = mongoose.Schema(
       default: false,
     },
     slug: String,
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    // embedding location document
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    // referencing
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
+    // embedding tour guide (user) document
+    // guides: Array,
   },
   {
     toJSON: { virtuals: true },
@@ -93,6 +128,14 @@ tourSchema.pre('save', function (next) {
   next();
 });
 
+// embedding
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+
+//   next();
+// });
+
 // document middleware (after create & save)
 tourSchema.post('save', function (doc, next) {
   console.log(doc);
@@ -104,6 +147,15 @@ tourSchema.post('save', function (doc, next) {
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+
   next();
 });
 
