@@ -177,6 +177,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// getting data from the child references without stoing ids
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 const Tour = mongoose.model('Tour', tourSchema);
 
 module.exports = Tour;

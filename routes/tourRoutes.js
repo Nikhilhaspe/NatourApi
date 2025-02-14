@@ -3,6 +3,10 @@ const tourRouter = require('express').Router();
 // conrollers
 const tourController = require('./../controllers/tourController');
 const authController = require('./../controllers/authController');
+const reviewRouter = require('./../routes/reviewRoutes');
+
+// nested routes
+tourRouter.use('/:tourId/reviews', reviewRouter);
 
 // routes
 tourRouter.route('/tour-stats').get(tourController.getTourStats);
