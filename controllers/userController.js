@@ -52,6 +52,10 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: { user: updatedUser } });
 });
 
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 exports.getAllUsers = factory.getAll(User);
 exports.getUser = factory.getOne(User);
 // do not update passwords with this

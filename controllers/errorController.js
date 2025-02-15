@@ -44,7 +44,6 @@ const sendErrorProd = (error, res) => {
     });
   } else {
     // Generic Error, do not send extra info to the client
-    console.log('ERROR 💥', error);
     res.status(500).json({ status: 'error', message: 'Something went wrong!' });
   }
 };

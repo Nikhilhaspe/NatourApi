@@ -1,6 +1,6 @@
 // global sync. errors uncaught exceptions only
 process.on('uncaughtException', (error) => {
-  console.log(`${error.name} : ${error.message}`);
+  console.log(error);
   process.exit(1);
 });
 

@@ -5,29 +5,28 @@ const userController = require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 
 // routes
+// public without auth
 userRouter
   .post('/signup', authController.signup)
   .post('/login', authController.login)
   .post('/forgotPassword', authController.forgotPassword)
   .patch('/resetPassword/:token', authController.resetPassword);
 
-userRouter
-  .route('/updatePassword')
-  .patch(authController.protect, authController.updatePassword);
+// protect all the routes from this point
+userRouter.use(authController.protect);
 
-userRouter
-  .route('/updateMe')
-  .patch(authController.protect, userController.updateMe);
+userRouter.route('/updatePassword').patch(authController.updatePassword);
+userRouter.get('/me', userController.getMe, userController.getUser);
+userRouter.route('/updateMe').patch(userController.updateMe);
+userRouter.route('/deleteMe').delete(userController.deleteMe);
 
-userRouter
-  .route('/deleteMe')
-  .delete(authController.protect, userController.deleteMe);
+// protect all the routes from this point to admins only
+userRouter.use(authController.restrictTo('admin'));
 
 userRouter
   .route('/')
   .get(userController.getAllUsers)
   .post(userController.createUser);
-
 userRouter
   .route('/:id')
   .get(userController.getUser)
