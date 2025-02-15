@@ -3,6 +3,7 @@ const User = require('./../models/userModel');
 // utilities
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const factory = require('./handlerFactory');
 
 // utility functions
 const filterObj = (obj, ...allowedFields) => {
@@ -16,37 +17,17 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 // controllers
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
 
-exports.getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find();
-
-  res
-    .status(200)
-    .json({ status: 'error', results: users.length, data: { users } });
+  res.status(204).json({ status: 'suceess', data: null });
 });
 
 exports.createUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is not yet defined.' });
-};
-
-exports.getUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is not yet defined.' });
-};
-
-exports.updateUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is not yet defined.' });
-};
-
-exports.deleteUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is not yet defined.' });
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not defined, Please use /sign up instead',
+  });
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
@@ -71,8 +52,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: { user: updatedUser } });
 });
 
-exports.deleteMe = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
-
-  res.status(204).json({ status: 'suceess', data: null });
-});
+exports.getAllUsers = factory.getAll(User);
+exports.getUser = factory.getOne(User);
+// do not update passwords with this
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
