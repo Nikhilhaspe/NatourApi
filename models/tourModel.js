@@ -38,6 +38,7 @@ const tourSchema = mongoose.Schema(
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
       max: [5, 'Rating must be below 5.0'],
+      set: (value) => Math.round(value * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -121,6 +122,12 @@ const tourSchema = mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+// single key index
+// tourSchema.index({ price: 1 });
+// compound key index
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
 
 // document middleware (before create & save)
 tourSchema.pre('save', function (next) {

@@ -37,7 +37,44 @@ const reviewSchema = mongoose.Schema(
   },
 );
 
+// indexing to prevent duplicate reviews from the same user
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
+// static methods
+reviewSchema.statics.calcAverageRatings = async function (tourId) {
+  const stats = await this.aggregate([
+    {
+      $match: { tour: tourId },
+    },
+    {
+      $group: {
+        _id: '$tour',
+        nRating: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    // saving data to tour document
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 4.5,
+    });
+  }
+};
+
 // query middleware
+reviewSchema.post('save', function () {
+  // this points to the curr. review
+  this.constructor.calcAverageRatings(this.tour);
+});
+
 reviewSchema.pre(/^find/, function (next) {
   //   this.populate({
   //     path: 'tour',
@@ -53,6 +90,18 @@ reviewSchema.pre(/^find/, function (next) {
   });
 
   next();
+});
+
+// findByIdAndUpdate
+// findByIdAndDelete
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  this.r = await this.model.findOne(this.getQuery());
+
+  next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function () {
+  await this.r.constructor.calcAverageRatings(this.r.tour);
 });
 
 const Review = mongoose.model('Review', reviewSchema);
