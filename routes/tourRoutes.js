@@ -24,6 +24,14 @@ tourRouter
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
 tourRouter
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+tourRouter
+  .route('/distance/:latlng/unit/:unit')
+  .get(tourController.getDistances);
+
+tourRouter
   .route('/')
   .get(tourController.getAllTours)
   .post(
