@@ -26,26 +26,48 @@ const handleDuplicateFieldsDB = (error) => {
   return new AppError(message, 400);
 };
 
-const sendErrorDev = (error, res) => {
-  res.status(error.statusCode).json({
-    status: error.status,
-    message: error.message,
-    stack: error.stack,
-    error: error,
+const sendErrorDev = (error, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    // for api
+    return res.status(error.statusCode).json({
+      status: error.status,
+      message: error.message,
+      stack: error.stack,
+      error: error,
+    });
+  }
+
+  // for view
+  return res.status(error.statusCode).render('error', {
+    title: 'Something went wrong',
+    msg: error.message,
   });
 };
 
-const sendErrorProd = (error, res) => {
-  // Trusted Error
-  if (error.isOperational) {
-    res.status(error.statusCode).json({
-      status: error.status,
-      message: error.message,
-    });
-  } else {
+const sendErrorProd = (error, req, res) => {
+  // A. APIs
+  if (req.originalUrl.startsWith('/api')) {
+    // Trusted Error For API
+    if (error.isOperational) {
+      return res.status(error.statusCode).json({
+        status: error.status,
+        message: error.message,
+      });
+    }
+
     // Generic Error, do not send extra info to the client
-    res.status(500).json({ status: 'error', message: 'Something went wrong!' });
+    return res
+      .status(500)
+      .json({ status: 'error', message: 'Something went wrong!' });
   }
+
+  // B. VIEWS
+  // Trusted Error For Views
+  if (error.isOperational) {
+    return res.status(error.statusCode).render('error', { msg: error.message });
+  }
+  // Generic Error, do not send extra info to the client
+  return res.status(500).render('error', { msg: 'Please Try Again!' });
 };
 
 module.exports = (error, req, res, next) => {
@@ -53,9 +75,10 @@ module.exports = (error, req, res, next) => {
   error.status = error.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(error, res);
+    sendErrorDev(error, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let errorCopy = { ...error };
+    errorCopy.message = error.message;
 
     if (error.name === 'CastError') {
       errorCopy = handleCastErrorDB(errorCopy);
@@ -77,7 +100,7 @@ module.exports = (error, req, res, next) => {
       errorCopy = handleJWTExpiredError();
     }
 
-    sendErrorProd(errorCopy, res);
+    sendErrorProd(errorCopy, req, res);
   }
 
   return;

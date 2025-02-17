@@ -1,11 +1,12 @@
 // login
-import { login } from './login.js';
+import { login, logout } from './login.js';
 // mapbox
 import displayMap from './mapbox.js';
 
 // DOM
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form');
+const logOutBtn = document.querySelector('.nav__el--logout');
 
 // DELEGATIONS
 if (mapBox) {
@@ -23,4 +24,8 @@ if (loginForm) {
 
     login(email, password);
   });
+}
+
+if (logOutBtn) {
+  logOutBtn.addEventListener('click', logout);
 }
