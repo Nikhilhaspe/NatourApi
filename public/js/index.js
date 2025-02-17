@@ -1,12 +1,15 @@
 // login
 import { login, logout } from './login.js';
+import { updateSettings } from './updateSettings.js';
 // mapbox
 import displayMap from './mapbox.js';
 
 // DOM
 const mapBox = document.getElementById('map');
-const loginForm = document.querySelector('.form');
+const loginForm = document.querySelector('.form--login');
 const logOutBtn = document.querySelector('.nav__el--logout');
+const updateDataBtn = document.querySelector('.save-user-btn');
+const userPasswordForm = document.querySelector('.form-user-password');
 
 // DELEGATIONS
 if (mapBox) {
@@ -28,4 +31,32 @@ if (loginForm) {
 
 if (logOutBtn) {
   logOutBtn.addEventListener('click', logout);
+}
+
+if (updateDataBtn) {
+  updateDataBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const name = document.getElementById('name').value;
+
+    updateSettings({ email, name }, 'data');
+  });
+}
+
+if (userPasswordForm) {
+  userPasswordForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    document.querySelector('.btn--save-password').textContent = 'Updating...';
+
+    const currentPassword = document.getElementById('password-current').value;
+    const newPassword = document.getElementById('password-confirm').value;
+
+    await updateSettings({ currentPassword, newPassword }, 'password');
+
+    document.querySelector('.btn--save-password').textContent = 'Save';
+    document.getElementById('password-current').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('password-confirm').value = '';
+  });
 }

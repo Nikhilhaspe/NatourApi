@@ -80,6 +80,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -113,6 +115,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // SUCCESSFULL: Grant access to protected route
   req.user = currentUser;
+  res.locals.user = currentUser;
   next();
 });
 
@@ -219,7 +222,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1. get user
-  const user = await User.findById(req.body.id).select('+password');
+  const user = await User.findById(req.user.id).select('+password');
 
   if (!user) {
     next(new AppError('User not found!', 404));

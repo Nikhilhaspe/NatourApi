@@ -45,8 +45,10 @@ app.use('/api', limiter);
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-// body parser middleware
+// body parser middleware (APIs)
 app.use(express.json({ limit: '10kb' }));
+// body parser middleware (frontend form data)
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // cookie parser middleware
 app.use(cookieParser());
 // data sanitization against nosql query injection

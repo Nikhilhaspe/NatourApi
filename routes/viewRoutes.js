@@ -5,13 +5,22 @@ const authController = require('./../controllers/authController');
 
 const viewRouter = express.Router();
 
-// protect all below routes
-viewRouter.use(authController.isLoggedIn);
+viewRouter.get('/login', authController.isLoggedIn, viewController.login);
 
-viewRouter.get('/login', viewController.login);
+viewRouter.get('/', authController.isLoggedIn, viewController.getOverview);
 
-viewRouter.get('/', viewController.getOverview);
+viewRouter.get(
+  '/tour/:slug',
+  authController.isLoggedIn,
+  viewController.getTour,
+);
 
-viewRouter.get('/tour/:slug', viewController.getTour);
+viewRouter.get('/me', authController.protect, viewController.getAccount);
+
+viewRouter.post(
+  '/submit-user-data',
+  authController.protect,
+  viewController.updateUserData,
+);
 
 module.exports = viewRouter;
