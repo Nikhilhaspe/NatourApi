@@ -13004,17 +13004,17 @@ var displayMap = exports.displayMap = function displayMap(locations) {
     container: 'map',
     style: 'mapbox://styles/jonasschmedtmann/cjvi9q8jd04mi1cpgmg7ev3dy',
     scrollZoom: false
-    //   center: [-118.113491, 34.111745],
-    //   zoom: 10,
-    //   interactive: false,
+    // center: [-118.113491, 34.111745],
+    // zoom: 10,
+    // interactive: false
   });
   var bounds = new mapboxgl.LngLatBounds();
   locations.forEach(function (loc) {
-    // Create Marker
+    // Create marker
     var el = document.createElement('div');
     el.className = 'marker';
 
-    // Add Marker
+    // Add marker
     new mapboxgl.Marker({
       element: el,
       anchor: 'bottom'
@@ -13023,15 +13023,17 @@ var displayMap = exports.displayMap = function displayMap(locations) {
     // Add popup
     new mapboxgl.Popup({
       offset: 30
-    }).setLngLat(loc.coordinates).setHTML("<p>Day ".concat(loc.day, " : ").concat(loc.description, "</p>")).addTo(map);
+    }).setLngLat(loc.coordinates).setHTML("<p>Day ".concat(loc.day, ": ").concat(loc.description, "</p>")).addTo(map);
+
+    // Extend map bounds to include current location
     bounds.extend(loc.coordinates);
   });
   map.fitBounds(bounds, {
     padding: {
       top: 200,
       bottom: 150,
-      left: 200,
-      right: 200
+      left: 100,
+      right: 100
     }
   });
 };
