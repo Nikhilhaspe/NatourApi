@@ -18,7 +18,13 @@ userRouter.use(authController.protect);
 
 userRouter.route('/updatePassword').patch(authController.updatePassword);
 userRouter.get('/me', userController.getMe, userController.getUser);
-userRouter.route('/updateMe').patch(userController.updateMe);
+userRouter
+  .route('/updateMe')
+  .patch(
+    userController.uploadUserPhoto,
+    userController.resizeUserPhoto,
+    userController.updateMe,
+  );
 userRouter.route('/deleteMe').delete(userController.deleteMe);
 
 // protect all the routes from this point to admins only

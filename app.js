@@ -70,10 +70,9 @@ app.use(
 );
 
 // test middleware
-app.use((req, res, next) => {
-  console.log('COOKIES 🍪', req.cookies);
-  next();
-});
+// app.use((req, res, next) => {
+//   next();
+// });
 
 // routes
 // VIEWS
