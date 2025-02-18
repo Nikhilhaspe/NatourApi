@@ -2,7 +2,7 @@
 import { login, logout } from './login.js';
 import { updateSettings } from './updateSettings.js';
 // mapbox
-import displayMap from './mapbox.js';
+import { displayMap } from './mapbox.js';
 
 // DOM
 const mapBox = document.getElementById('map');
