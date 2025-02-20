@@ -13,10 +13,18 @@ module.exports = class Email {
 
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
-      // Sendgrid
-      return 1;
+      // real mail
+      return nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        auth: {
+          user: '862ee3001@smtp-brevo.com',
+          pass: process.env.BREVO_KEY,
+        },
+      });
     }
 
+    // dummy mail
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
