@@ -4,10 +4,7 @@ import { showAlert } from './alerts';
 
 export const signup = async (data) => {
   try {
-    const res = await axios.post(
-      'http://localhost:3000/api/v1/users/signup',
-      data,
-    );
+    const res = await axios.post('/api/v1/users/signup', data);
 
     if (res.data.status === 'success') {
       showAlert(
