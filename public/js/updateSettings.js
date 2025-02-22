@@ -11,7 +11,7 @@ export async function updateSettings(data, type) {
 
     const res = await axios({
       method: 'PATCH',
-      url: `http://localhost:3000/api/v1/users/${urlFill}`,
+      url: `/api/v1/users/${urlFill}`,
       data,
     });
 
