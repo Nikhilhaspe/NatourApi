@@ -1,39 +1,38 @@
 const mongoose = require('mongoose');
 
-const bookingsSchema = mongoose.Schema({
+const bookingSchema = new mongoose.Schema({
   tour: {
     type: mongoose.Schema.ObjectId,
     ref: 'Tour',
-    require: [true, 'Booking must belong to a tour'],
+    required: [true, 'Booking must belong to a Tour!']
   },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    require: [true, 'Booking must belong to a user'],
+    required: [true, 'Booking must belong to a User!']
   },
   price: {
     type: Number,
-    require: [true, 'Booking must have a price'],
+    require: [true, 'Booking must have a price.']
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now()
   },
   paid: {
     type: Boolean,
-    default: true,
-  },
+    default: true
+  }
 });
 
-// query middlewares
-bookingsSchema.pre(/^find/, function (next) {
-  this.populate({
+bookingSchema.pre(/^find/, function(next) {
+  this.populate('user').populate({
     path: 'tour',
-    select: 'name',
-  }).populate('user');
-
+    select: 'name'
+  });
   next();
 });
 
-const Booking = mongoose.model('Booking', bookingsSchema);
+const Booking = mongoose.model('Booking', bookingSchema);
+
 module.exports = Booking;

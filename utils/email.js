@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-const catchAsync = require('./catchAsync');
 const pug = require('pug');
 const htmlToText = require('html-to-text');
 
@@ -8,51 +7,50 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Nikhil Haspe <${process.env.EMAIL_FROM}>`;
+    this.from = `Jonas Schmedtmann <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
-      // real mail
+      // Sendgrid
       return nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587,
+        service: 'SendGrid',
         auth: {
-          user: '862ee3001@smtp-brevo.com',
-          pass: process.env.BREVO_KEY,
-        },
+          user: process.env.SENDGRID_USERNAME,
+          pass: process.env.SENDGRID_PASSWORD
+        }
       });
     }
 
-    // dummy mail
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
       auth: {
         user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD,
-      },
+        pass: process.env.EMAIL_PASSWORD
+      }
     });
   }
 
+  // Send the actual email
   async send(template, subject) {
-    // 1. render html for email from pug template
+    // 1) Render HTML based on a pug template
     const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
-      subject,
+      subject
     });
 
-    // 2. define email options
+    // 2) Define email options
     const mailOptions = {
       from: this.from,
       to: this.to,
-      subject: subject,
+      subject,
       html,
-      text: htmlToText.fromString(html),
+      text: htmlToText.fromString(html)
     };
 
-    // 3. create transport and send mail
+    // 3) Create a transport and send email
     await this.newTransport().sendMail(mailOptions);
   }
 
@@ -63,7 +61,7 @@ module.exports = class Email {
   async sendPasswordReset() {
     await this.send(
       'passwordReset',
-      'Your password reset token (valid for only 10 minutes!)',
+      'Your password reset token (valid for only 10 minutes)'
     );
   }
 };

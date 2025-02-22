@@ -1,24 +1,25 @@
+/* eslint-disable */
 import axios from 'axios';
-import '@babel/polyfill';
-
-// alerts
 import { showAlert } from './alerts';
 
 // type is either 'password' or 'data'
-export async function updateSettings(data, type) {
+export const updateSettings = async (data, type) => {
   try {
-    const urlFill = type == 'password' ? 'updatePassword' : 'updateMe';
+    const url =
+      type === 'password'
+        ? 'http://localhost:3000/api/v1/users/updateMyPassword'
+        : 'http://localhost:3000/api/v1/users/updateMe';
 
     const res = await axios({
       method: 'PATCH',
-      url: `/api/v1/users/${urlFill}`,
+      url,
       data,
     });
 
     if (res.data.status === 'success') {
-      showAlert('success', `User ${type.toUpperCase()} updated successfully!`);
+      showAlert('success', `${type.toUpperCase()} updated successfully!`);
     }
-  } catch (error) {
-    showAlert('error', error.response.data.message);
+  } catch (err) {
+    showAlert('error', err.response.data.message);
   }
-}
+};

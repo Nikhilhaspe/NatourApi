@@ -1,43 +1,40 @@
-const userRouter = require('express').Router();
-
-// controllers
+const express = require('express');
 const userController = require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 
-// routes
-// public without auth
-userRouter
-  .post('/signup', authController.signup)
-  .post('/login', authController.login)
-  .get('/logout', authController.logout)
-  .post('/forgotPassword', authController.forgotPassword)
-  .patch('/resetPassword/:token', authController.resetPassword);
+const router = express.Router();
 
-// protect all the routes from this point
-userRouter.use(authController.protect);
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
+router.get('/logout', authController.logout);
 
-userRouter.route('/updatePassword').patch(authController.updatePassword);
-userRouter.get('/me', userController.getMe, userController.getUser);
-userRouter
-  .route('/updateMe')
-  .patch(
-    userController.uploadUserPhoto,
-    userController.resizeUserPhoto,
-    userController.updateMe,
-  );
-userRouter.route('/deleteMe').delete(userController.deleteMe);
+router.post('/forgotPassword', authController.forgotPassword);
+router.patch('/resetPassword/:token', authController.resetPassword);
 
-// protect all the routes from this point to admins only
-userRouter.use(authController.restrictTo('admin'));
+// Protect all routes after this middleware
+router.use(authController.protect);
 
-userRouter
+router.patch('/updateMyPassword', authController.updatePassword);
+router.get('/me', userController.getMe, userController.getUser);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
+router.delete('/deleteMe', userController.deleteMe);
+
+router.use(authController.restrictTo('admin'));
+
+router
   .route('/')
   .get(userController.getAllUsers)
   .post(userController.createUser);
-userRouter
+
+router
   .route('/:id')
   .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
 
-module.exports = userRouter;
+module.exports = router;

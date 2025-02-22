@@ -1,107 +1,108 @@
-const AppError = require('../utils/appError');
+const AppError = require('./../utils/appError');
+
+const handleCastErrorDB = err => {
+  const message = `Invalid ${err.path}: ${err.value}.`;
+  return new AppError(message, 400);
+};
+
+const handleDuplicateFieldsDB = err => {
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  console.log(value);
+
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError(message, 400);
+};
+
+const handleValidationErrorDB = err => {
+  const errors = Object.values(err.errors).map(el => el.message);
+
+  const message = `Invalid input data. ${errors.join('. ')}`;
+  return new AppError(message, 400);
+};
 
 const handleJWTError = () =>
-  new AppError('Invalid Token. Please log in again', 401);
+  new AppError('Invalid token. Please log in again!', 401);
 
 const handleJWTExpiredError = () =>
-  new AppError('Your Token Has Expired. Please log in again', 401);
+  new AppError('Your token has expired! Please log in again.', 401);
 
-const handleValidationErrorDB = (error) => {
-  const allErrorMsg = Object.values(error.errors)
-    .map((el) => el.message)
-    .join('. ');
-  const message = `Invalid input data. ${allErrorMsg}`;
-
-  return new AppError(message, 400);
-};
-
-const handleCastErrorDB = (error) => {
-  const message = `Invalid ${error.path} : ${error.value}`;
-  return new AppError(message, 400);
-};
-
-const handleDuplicateFieldsDB = (error) => {
-  const value = error.errorResponse.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  const message = `Duplicate field value: ${value} Please use another value`;
-  return new AppError(message, 400);
-};
-
-const sendErrorDev = (error, req, res) => {
+const sendErrorDev = (err, req, res) => {
+  // A) API
   if (req.originalUrl.startsWith('/api')) {
-    // for api
-    return res.status(error.statusCode).json({
-      status: error.status,
-      message: error.message,
-      stack: error.stack,
-      error: error,
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack
     });
   }
 
-  // for view
-  return res.status(error.statusCode).render('error', {
-    title: 'Something went wrong',
-    msg: error.message,
+  // B) RENDERED WEBSITE
+  console.error('ERROR 💥', err);
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: err.message
   });
 };
 
-const sendErrorProd = (error, req, res) => {
-  // A. APIs
+const sendErrorProd = (err, req, res) => {
+  // A) API
   if (req.originalUrl.startsWith('/api')) {
-    // Trusted Error For API
-    if (error.isOperational) {
-      return res.status(error.statusCode).json({
-        status: error.status,
-        message: error.message,
+    // A) Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message
       });
     }
-
-    // Generic Error, do not send extra info to the client
-    return res
-      .status(500)
-      .json({ status: 'error', message: 'Something went wrong!' });
+    // B) Programming or other unknown error: don't leak error details
+    // 1) Log error
+    console.error('ERROR 💥', err);
+    // 2) Send generic message
+    return res.status(500).json({
+      status: 'error',
+      message: 'Something went very wrong!'
+    });
   }
 
-  // B. VIEWS
-  // Trusted Error For Views
-  if (error.isOperational) {
-    return res.status(error.statusCode).render('error', { msg: error.message });
+  // B) RENDERED WEBSITE
+  // A) Operational, trusted error: send message to client
+  if (err.isOperational) {
+    console.log(err);
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message
+    });
   }
-  // Generic Error, do not send extra info to the client
-  return res.status(500).render('error', { msg: 'Please Try Again!' });
+  // B) Programming or other unknown error: don't leak error details
+  // 1) Log error
+  console.error('ERROR 💥', err);
+  // 2) Send generic message
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later.'
+  });
 };
 
-module.exports = (error, req, res, next) => {
-  error.statusCode = error.statusCode || 500;
-  error.status = error.status || 'error';
+module.exports = (err, req, res, next) => {
+  // console.log(err.stack);
+
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(error, req, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
-    let errorCopy = { ...error };
-    errorCopy.message = error.message;
+    let error = { ...err };
+    error.message = err.message;
 
-    if (error.name === 'CastError') {
-      errorCopy = handleCastErrorDB(errorCopy);
-    }
+    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
+    if (error.name === 'ValidationError')
+      error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJWTError();
+    if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
 
-    if (error.code === 11000) {
-      errorCopy = handleDuplicateFieldsDB(errorCopy);
-    }
-
-    if (error.name === 'ValidationError') {
-      errorCopy = handleValidationErrorDB(errorCopy);
-    }
-
-    if (error.name === 'JsonWebTokenError') {
-      errorCopy = handleJWTError();
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      errorCopy = handleJWTExpiredError();
-    }
-
-    sendErrorProd(errorCopy, req, res);
+    sendErrorProd(error, req, res);
   }
-
-  return;
 };
