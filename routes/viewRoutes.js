@@ -5,6 +5,9 @@ const bookingController = require('../controllers/bookingController');
 
 const router = express.Router();
 
+// alerts middleware stripe
+router.use(viewsController.alerts);
+
 router.get('/', authController.isLoggedIn, viewsController.getOverview);
 
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
