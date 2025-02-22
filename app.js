@@ -20,6 +20,10 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
 
+// CORS
+app.use(cors());
+app.options('*', cors());
+
 // setup view engine
 app.set('view engine', 'pug');
 // views location
