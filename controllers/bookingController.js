@@ -4,6 +4,29 @@ const Booking = require('../models/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 
+// utility function to create a booking after a successful payment
+async function createBookingCheckout(session) {
+  console.log(session);
+}
+
+exports.webhookCheckout = (req, res, next) => {
+  try {
+    const signature = req.headers['stripe-signature'];
+    const event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET,
+    );
+
+    if (event.type === 'checkout.session.completed') {
+      createBookingCheckout(event.data.object);
+      res.status(200).json({ received: true });
+    }
+  } catch (error) {
+    return res.status(400).send(`Web Hook Error ${error.message}`);
+  }
+};
+
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   // 1) Get the currently booked tour
   const tour = await Tour.findById(req.params.tourId);
@@ -11,9 +34,10 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   // 2) Create checkout session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
-    success_url: `${req.protocol}://${req.get('host')}/my-tours/?tour=${
-      req.params.tourId
-    }&user=${req.user.id}&price=${tour.price}`,
+    // success_url: `${req.protocol}://${req.get('host')}/my-tours/?tour=${
+    //   req.params.tourId
+    // }&user=${req.user.id}&price=${tour.price}`,
+    success_url: 'https://natour-api-seven.vercel.app/webhook-checkout',
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     customer_email: req.user.email,
     client_reference_id: req.params.tourId,
@@ -36,15 +60,15 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createBookingCheckout = catchAsync(async (req, res, next) => {
-  // This is only TEMPORARY, because it's UNSECURE: everyone can make bookings without paying
-  const { tour, user, price } = req.query;
+// exports.createBookingCheckout = catchAsync(async (req, res, next) => {
+//   // This is only TEMPORARY, because it's UNSECURE: everyone can make bookings without paying
+//   const { tour, user, price } = req.query;
 
-  if (!tour && !user && !price) return next();
-  await Booking.create({ tour, user, price });
+//   if (!tour && !user && !price) return next();
+//   await Booking.create({ tour, user, price });
 
-  res.redirect(req.originalUrl.split('?')[0]);
-});
+//   res.redirect(req.originalUrl.split('?')[0]);
+// });
 
 exports.createBooking = factory.createOne(Booking);
 exports.getBooking = factory.getOne(Booking);

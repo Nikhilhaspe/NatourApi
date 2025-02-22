@@ -14,6 +14,8 @@ const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
+// controllers
+const bookingController = require('./controllers/bookingController');
 // utility modules
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -51,6 +53,14 @@ app.use('/api', limiter);
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+// stripe web hook
+app.post(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }),
+  bookingController.webhookCheckout,
+);
+
 // body parser middleware (APIs)
 app.use(express.json({ limit: '10kb' }));
 // body parser middleware (frontend form data)
