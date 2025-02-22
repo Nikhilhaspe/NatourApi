@@ -8,6 +8,7 @@ const hpp = require('hpp');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const compression = require('compression');
 // custom modules
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -21,6 +22,9 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+
+// proxy
+app.enable('trust proxy');
 
 // CORS
 app.use(cors());
@@ -89,6 +93,9 @@ app.use(
 // app.use((req, res, next) => {
 //   next();
 // });
+
+// compression
+app.use(compression());
 
 // routes
 // VIEWS
